@@ -3,7 +3,6 @@
 #include "commodettoBitmapFormat.h"
 #include <stdlib.h>
 
-#define MIN_COLOR_DISTANCE 32
 #define SAMPLE_STEP 8
 
 static uint8_t clampComponent(int value)
@@ -28,18 +27,6 @@ static void prepareColor(uint32_t r, uint32_t g, uint32_t b, uint32_t count, uin
 	out[0] = prepareComponent(r, count, numerator);
 	out[1] = prepareComponent(g, count, numerator);
 	out[2] = prepareComponent(b, count, numerator);
-}
-
-static int colorDistance(const uint8_t *a, const uint8_t *b)
-{
-	return abs((int)a[0] - (int)b[0]) + abs((int)a[1] - (int)b[1]) + abs((int)a[2] - (int)b[2]);
-}
-
-static void darkenColor(uint8_t *color, uint8_t numerator)
-{
-	color[0] = (uint8_t)((color[0] * numerator + 50) / 100);
-	color[1] = (uint8_t)((color[1] * numerator + 50) / 100);
-	color[2] = (uint8_t)((color[2] * numerator + 50) / 100);
 }
 
 static uint8_t read8(const uint8_t *bytes, xsUnsignedValue byteLength, xsUnsignedValue offset)
@@ -138,9 +125,8 @@ void xs_extractThemeColors(xsMachine *the)
 	int height = xsmcToInteger(xsArg(2));
 	int pixelFormat = xsmcToInteger(xsArg(3));
 	xsUnsignedValue offset = (xsUnsignedValue)xsmcToInteger(xsArg(4));
-	int middle;
-	uint32_t top[3], bottom[3];
-	uint32_t topCount, bottomCount;
+	uint32_t color[3];
+	uint32_t count;
 	uint8_t *result;
 
 	if ((width <= 0) || (height <= 0)) {
@@ -154,20 +140,12 @@ void xs_extractThemeColors(xsMachine *the)
 		return;
 	}
 
-	middle = height >> 1;
-	if (middle < 1)
-		middle = 1;
-
-	topCount = averageRegion(buffer, byteLength, width, height, pixelFormat, offset, 0, middle, top);
-	bottomCount = averageRegion(buffer, byteLength, width, height, pixelFormat, offset, middle, height, bottom);
-	if (!topCount || !bottomCount) {
+	count = averageRegion(buffer, byteLength, width, height, pixelFormat, offset, 0, height, color);
+	if (!count) {
 		xsResult = xsUndefined;
 		return;
 	}
 
-	result = xsmcSetArrayBuffer(xsResult, NULL, 6);
-	prepareColor(top[0], top[1], top[2], topCount, 64, result);
-	prepareColor(bottom[0], bottom[1], bottom[2], bottomCount, 76, result + 3);
-	if (colorDistance(result, result + 3) < MIN_COLOR_DISTANCE)
-		darkenColor(result + 3, 72);
+	result = xsmcSetArrayBuffer(xsResult, NULL, 3);
+	prepareColor(color[0], color[1], color[2], count, 64, result);
 }

@@ -27,6 +27,7 @@ const Textures = Object.freeze({
 	knob: new Texture("knob-mask.png"),
 	knobLarge: new Texture("knob-large-mask.png"),
 	knobSmall: new Texture("knob-small-mask.png"),
+	backgroundGradient: new Texture("background-gradient-mask.png"),
 });
 
 const iconSkin = (texture, color = Colors.text, size = 32) =>
@@ -52,6 +53,12 @@ const Skins = Object.freeze({
 		color: [Colors.transparent, Colors.accent],
 	}),
 	artwork: new Skin({ fill: Colors.panelAlt }),
+	backgroundGradient: new Skin({
+		texture: Textures.backgroundGradient,
+		width: 240,
+		height: 320,
+		color: Colors.background,
+	}),
 	knobActive: iconSkin(Textures.knobLarge, Colors.white, 16),
 	knobInactive: iconSkin(Textures.knob, Colors.sliderInactive, 10),
 	knobSmallActive: iconSkin(Textures.knobLarge, Colors.white, 14),

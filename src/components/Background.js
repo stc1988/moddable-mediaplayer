@@ -1,13 +1,10 @@
 import { log } from "Logger";
 import extractThemeColorsFromBitmap from "ThemeColorExtractor";
-import { Colors } from "assets";
+import { Skins } from "assets";
 import loadJPEG from "commodetto/loadJPEG";
 
 const FALLBACK_TOP = "#101418";
-const FALLBACK_BOTTOM = Colors.background;
-const GRADIENT_BAND_HEIGHT = 8;
 const MIN_TOP_LUMA = 82;
-const MIN_BOTTOM_LUMA = 44;
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
@@ -29,89 +26,48 @@ function brightenForBackground(color, minimumLuma) {
 	};
 }
 
-const interpolateColor = (from, to, position) =>
-	rgbToHex({
-		r: Math.round(from.r + (to.r - from.r) * position),
-		g: Math.round(from.g + (to.g - from.g) * position),
-		b: Math.round(from.b + (to.b - from.b) * position),
-	});
-
-function extractBackgroundPalette(data) {
+function extractBackgroundColor(data) {
 	const bitmap = loadJPEG(data);
 	const colors = extractThemeColorsFromBitmap(bitmap);
 	if (!colors) return undefined;
-	const palette = new Uint8Array(colors);
-	return {
-		top: { r: palette[0], g: palette[1], b: palette[2] },
-		bottom: { r: palette[3], g: palette[4], b: palette[5] },
-	};
+	const color = new Uint8Array(colors);
+	return { r: color[0], g: color[1], b: color[2] };
 }
 
-const Background = Port.template((_$) => ({
+const Background = Container.template(($) => ({
+	skin: new Skin({ fill: FALLBACK_TOP }),
+	contents: [Content($, { left: 0, right: 0, top: 0, bottom: 0, skin: Skins.backgroundGradient })],
 	Behavior: class extends Behavior {
-		onCreate() {
+		onCreate(_container) {
 			this.key = null;
-			this.top = FALLBACK_TOP;
-			this.bottom = FALLBACK_BOTTOM;
+			this.color = FALLBACK_TOP;
 		}
-		onModelChanged(port, model) {
+		onModelChanged(container, model) {
 			const artwork = model.artwork;
 			if (artwork?.state !== "loaded" || !artwork.data) {
 				if (this.key === null) return;
 				this.key = null;
-				this.top = FALLBACK_TOP;
-				this.bottom = FALLBACK_BOTTOM;
-				port.invalidate();
+				this.color = FALLBACK_TOP;
+				container.skin = new Skin({ fill: this.color });
 				return;
 			}
 			if (this.key === artwork.key) return;
 			this.key = artwork.key;
 			try {
 				const started = Date.now();
-				const palette = extractBackgroundPalette(artwork.data);
-				if (palette) {
-					const rawTop = rgbToHex(palette.top);
-					const rawBottom = rgbToHex(palette.bottom);
-					this.top = rgbToHex(brightenForBackground(palette.top, MIN_TOP_LUMA));
-					this.bottom = rgbToHex(brightenForBackground(palette.bottom, MIN_BOTTOM_LUMA));
-					log(
-						"theme",
-						"colors extracted",
-						`${artwork.key} rawTop=${rawTop} rawBottom=${rawBottom} top=${this.top} bottom=${this.bottom} ms=${
-							Date.now() - started
-						}`,
-					);
-					port.invalidate();
+				const color = extractBackgroundColor(artwork.data);
+				if (color) {
+					const raw = rgbToHex(color);
+					this.color = rgbToHex(brightenForBackground(color, MIN_TOP_LUMA));
+					log("theme", "color extracted", `${artwork.key} raw=${raw} color=${this.color} ms=${Date.now() - started}`);
+					container.skin = new Skin({ fill: this.color });
 				} else {
 					log("theme", "colors unavailable", `${artwork.key} ms=${Date.now() - started}`);
 				}
 			} catch (error) {
 				log("theme", "color extraction failed", `${artwork.key} error=${error}`);
-				this.top = FALLBACK_TOP;
-				this.bottom = FALLBACK_BOTTOM;
-				port.invalidate();
-			}
-		}
-		onDraw(port) {
-			const top = {
-				r: Number.parseInt(this.top.slice(1, 3), 16),
-				g: Number.parseInt(this.top.slice(3, 5), 16),
-				b: Number.parseInt(this.top.slice(5, 7), 16),
-			};
-			const bottom = {
-				r: Number.parseInt(this.bottom.slice(1, 3), 16),
-				g: Number.parseInt(this.bottom.slice(3, 5), 16),
-				b: Number.parseInt(this.bottom.slice(5, 7), 16),
-			};
-			const last = Math.max(1, port.height - 1);
-			for (let y = 0; y < port.height; y += GRADIENT_BAND_HEIGHT) {
-				port.fillColor(
-					interpolateColor(top, bottom, y / last),
-					0,
-					y,
-					port.width,
-					Math.min(GRADIENT_BAND_HEIGHT, port.height - y),
-				);
+				this.color = FALLBACK_TOP;
+				container.skin = new Skin({ fill: this.color });
 			}
 		}
 	},

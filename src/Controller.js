@@ -51,6 +51,12 @@ class Controller {
 	fetchArtwork(track) {
 		const key = createArtworkKey(track);
 		if (!track.artist || !track.album || this.artworkKey === key) return;
+		if (!this.model.network.connected) {
+			log("controller", "artwork request skipped", `${key} network unavailable`);
+			applyModelUpdate(this.model, { artwork: { key, state: "unavailable" } });
+			this.notifyView();
+			return;
+		}
 
 		this.artworkKey = key;
 		this.artworkRequestID = (this.artworkRequestID || 0) + 1;

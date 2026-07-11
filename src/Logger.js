@@ -13,6 +13,10 @@ function describeUpdate(update) {
 	appendValue(parts, "connection", update.connection);
 	appendValue(parts, "playback", update.playback);
 	appendValue(parts, "volume", update.volume);
+	if (update.network) {
+		appendValue(parts, "network", update.network.connected ? "connected" : "disconnected");
+		appendValue(parts, "ip", update.network.ip);
+	}
 	if (update.device) {
 		appendValue(parts, "device", update.device.name);
 		appendValue(parts, "status", update.device.status);
@@ -35,6 +39,7 @@ function isElapsedOnlyUpdate(update) {
 		update.connection !== undefined ||
 		update.playback !== undefined ||
 		update.volume !== undefined ||
+		update.network !== undefined ||
 		update.device !== undefined ||
 		update.artwork !== undefined
 	) {

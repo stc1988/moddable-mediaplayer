@@ -8,6 +8,7 @@
 		"build:ancs:sim": "cd examples/ancs-notifications && mcconfig -d -m -p sim",
 		"debug:sim": "cd examples/ams-media-player && mcconfig -dl -m -p sim",
 		"debug:ancs:sim": "cd examples/ancs-notifications && mcconfig -dl -m -p sim",
+		"extract-font-chars": "node scripts/extract-font-chars.js",
 		"format": "biome format --write .",
 		"format:check": "biome format .",
 		"lint": "biome lint .",
@@ -27,6 +28,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.2",
 		"@moddable/typings": "^8.3.0",
+		"fontkit": "^2.0.4",
 		"typescript": "^5.9.3"
 	}
 }

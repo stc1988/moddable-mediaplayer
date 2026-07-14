@@ -48,14 +48,26 @@ class ANCSService {
 		this.delegate?.onANCSNotificationRemoved?.(notification);
 	}
 
+	onANCSServiceChanged(change) {
+		this.delegate?.onANCSServiceChanged?.(change);
+		const client = this.client;
+		this.client = undefined;
+		client?.disconnect();
+		this.#scheduleReconnect();
+	}
+
 	onANCSError(error) {
 		if (error !== undefined) {
 			this.delegate?.onANCSError?.(error);
 			return;
 		}
 
-		this.ready = false;
 		this.client = undefined;
+		this.#scheduleReconnect();
+	}
+
+	#scheduleReconnect() {
+		this.ready = false;
 		this.delegate?.onANCSStatus?.("reconnecting");
 		if (this.reconnectTimer) return;
 		this.reconnectTimer = Timer.set(() => {

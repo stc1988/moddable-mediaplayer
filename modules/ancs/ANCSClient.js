@@ -6,6 +6,8 @@ const ANCS_SERVICE_UUID = "7905f431-b5ce-4e99-a40f-4b1e122d00d0";
 const NOTIFICATION_SOURCE_UUID = "9fbf120d-6301-42d9-8c58-25e699a21dbd";
 const CONTROL_POINT_UUID = "69d1d8f3-45e1-49a8-9821-9bbdfdaad9d9";
 const DATA_SOURCE_UUID = "22eac6e9-24d6-4bb5-be44-b36ace7c7bfb";
+const GENERIC_ATTRIBUTE_SERVICE_UUID = "1801";
+const SERVICE_CHANGED_UUID = "2a05";
 const GATT_CLIENT_MTU = 185;
 
 const EventID = Object.freeze({ added: 0, modified: 1, removed: 2 });
@@ -91,7 +93,9 @@ class ANCSClient {
 				while (count--) {
 					const value = this.read();
 					if (!value) continue;
-					if (value.handle === client.#characteristics.notificationSource?.handle)
+					if (value.handle === client.#characteristics.serviceChanged?.handle)
+						client.#handleServiceChanged(new Uint8Array(value));
+					else if (value.handle === client.#characteristics.notificationSource?.handle)
 						client.#handleNotificationSource(new Uint8Array(value));
 					else if (value.handle === client.#characteristics.dataSource?.handle)
 						client.#handleDataSource(new Uint8Array(value));
@@ -127,6 +131,26 @@ class ANCSClient {
 	}
 
 	#discover(gatt) {
+		gatt.getPrimaryServices([GENERIC_ATTRIBUTE_SERVICE_UUID], (serviceError, services) => {
+			if (serviceError || !services.length) {
+				this.#discoverANCS(gatt);
+				return;
+			}
+			gatt.getCharacteristics(services[0], [SERVICE_CHANGED_UUID], (characteristicError, characteristics) => {
+				if (characteristicError || !characteristics.length) {
+					this.#discoverANCS(gatt);
+					return;
+				}
+				this.#characteristics.serviceChanged = characteristics[0];
+				gatt.subscribe(this.#characteristics.serviceChanged, (subscribeError) => {
+					if (subscribeError) this.#characteristics.serviceChanged = undefined;
+					this.#discoverANCS(gatt);
+				});
+			});
+		});
+	}
+
+	#discoverANCS(gatt) {
 		gatt.getPrimaryServices([ANCS_SERVICE_UUID], (serviceError, services) => {
 			if (serviceError || !services.length) return this.delegate?.onANCSError?.(serviceError ?? "ANCS not found");
 			gatt.getCharacteristics(
@@ -155,6 +179,14 @@ class ANCSClient {
 					});
 				},
 			);
+		});
+	}
+
+	#handleServiceChanged(bytes) {
+		if (bytes.length < 4) return;
+		this.delegate?.onANCSServiceChanged?.({
+			startHandle: bytes[0] | (bytes[1] << 8),
+			endHandle: bytes[2] | (bytes[3] << 8),
 		});
 	}
 

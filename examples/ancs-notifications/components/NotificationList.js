@@ -3,6 +3,11 @@ import { Skins, Styles } from "NotificationAssets";
 const MESSAGE_TOP = 49;
 const MESSAGE_BOTTOM = 8;
 const MAX_MESSAGE_LINES = 3;
+const ACTION_LABEL_WIDTH = 36;
+
+function actionLabel(label, style, fallback) {
+	return label && style.measure(label).width <= ACTION_LABEL_WIDTH ? label : fallback;
+}
 
 class VerticalScrollerBehavior extends Behavior {
 	onTouchBegan(scroller, _id, _x, y) {
@@ -22,10 +27,11 @@ class VerticalScrollerBehavior extends Behavior {
 	}
 }
 
-class DismissButtonBehavior extends Behavior {
+class ActionButtonBehavior extends Behavior {
 	onCreate(_button, data) {
 		this.controller = data.controller;
 		this.uid = data.notification.uid;
+		this.action = data.action;
 	}
 
 	onTouchBegan(button, id, x, y, ticks) {
@@ -40,7 +46,7 @@ class DismissButtonBehavior extends Behavior {
 	onTouchEnded(button, _id, x, y) {
 		const accepted = button.hit(x, y);
 		button.first.state = 0;
-		if (accepted) this.controller.onDismiss(this.uid);
+		if (accepted) this.controller.onAction(this.uid, this.action);
 	}
 
 	onTouchCancelled(button) {
@@ -65,7 +71,10 @@ class NotificationCardBehavior extends Behavior {
 
 const NotificationCard = Container.template(($) => {
 	const notification = $.notification;
-	const dismissible = notification.hasNegativeAction && !notification.pendingDismissal;
+	const positiveActionable = notification.hasPositiveAction && !notification.pendingAction;
+	const negativeActionable = notification.hasNegativeAction && !notification.pendingAction;
+	const positiveLabel = actionLabel(notification.positiveActionLabel, Styles.positive, "+");
+	const negativeLabel = actionLabel(notification.negativeActionLabel, Styles.negative, "×");
 	const appName = notification.appName ?? notification.appIdentifier ?? "iPhone";
 	const title = notification.title || notification.subtitle || "Notification";
 	const message = notification.message || notification.subtitle || "No additional details";
@@ -76,39 +85,63 @@ const NotificationCard = Container.template(($) => {
 		top: 8,
 		height: 106,
 		clip: true,
-		skin: notification.pendingDismissal ? Skins.cardPending : Skins.card,
+		skin: notification.pendingAction ? Skins.cardPending : Skins.card,
 		Behavior: NotificationCardBehavior,
 		contents: [
 			Content($, { left: 0, top: 0, width: 4, bottom: 0, skin: Skins.accent }),
-			Label($, { left: 12, right: 104, top: 6, height: 19, style: Styles.appName, string: appName }),
+			Label($, { left: 12, right: 144, top: 6, height: 19, style: Styles.appName, string: appName }),
 			Label($, {
-				right: 48,
+				right: 88,
 				top: 6,
 				width: 52,
 				height: 19,
 				style: Styles.receivedTime,
 				string: notification.receivedTime,
 			}),
-			Label($, { left: 12, right: 46, top: 26, height: 20, style: Styles.title, string: title }),
+			Label($, { left: 12, right: 86, top: 26, height: 20, style: Styles.title, string: title }),
 			Text($, { anchor: "MESSAGE", left: 12, right: 12, top: MESSAGE_TOP, style: Styles.message, string: message }),
-			Container($, {
-				right: 4,
-				top: 1,
-				width: 40,
-				height: 40,
-				active: dismissible,
-				contents: [
-					Label($, {
-						left: 0,
-						right: 0,
-						top: 0,
-						bottom: 1,
-						style: dismissible ? Styles.delete : Styles.deleteDisabled,
-						string: "×",
-					}),
-				],
-				Behavior: DismissButtonBehavior,
-			}),
+			Container(
+				{ controller: $.controller, notification, action: "positive" },
+				{
+					right: 44,
+					top: 1,
+					width: 40,
+					height: 40,
+					active: positiveActionable,
+					contents: [
+						Label($, {
+							left: 0,
+							right: 0,
+							top: 0,
+							bottom: 1,
+							style: positiveActionable ? Styles.positive : Styles.actionDisabled,
+							string: positiveLabel,
+						}),
+					],
+					Behavior: ActionButtonBehavior,
+				},
+			),
+			Container(
+				{ controller: $.controller, notification, action: "negative" },
+				{
+					right: 4,
+					top: 1,
+					width: 40,
+					height: 40,
+					active: negativeActionable,
+					contents: [
+						Label($, {
+							left: 0,
+							right: 0,
+							top: 0,
+							bottom: 1,
+							style: negativeActionable ? Styles.negative : Styles.actionDisabled,
+							string: negativeLabel,
+						}),
+					],
+					Behavior: ActionButtonBehavior,
+				},
+			),
 		],
 	};
 });

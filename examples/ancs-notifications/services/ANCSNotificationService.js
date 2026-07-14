@@ -10,8 +10,8 @@ class ANCSNotificationService extends NotificationService {
 		this.service.start();
 	}
 
-	dismiss(uid) {
-		return this.service?.performAction(uid, "negative") ?? false;
+	performAction(uid, action) {
+		return this.service?.performAction(uid, action) ?? false;
 	}
 
 	onANCSStatus(status) {

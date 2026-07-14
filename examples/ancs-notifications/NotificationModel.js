@@ -31,7 +31,7 @@ function addOrUpdateNotification(model, notification) {
 		...notification,
 		receivedAt,
 		receivedTime: formatReceivedTime(receivedAt),
-		pendingDismissal: false,
+		pendingAction: false,
 	};
 
 	if (index >= 0) model.notifications[index] = next;
@@ -45,9 +45,9 @@ function removeNotification(model, uid) {
 	if (index >= 0) model.notifications.splice(index, 1);
 }
 
-function setDismissalPending(model, uid, pending) {
+function setActionPending(model, uid, pending) {
 	const notification = model.notifications.find((item) => item.uid === uid);
-	if (notification) notification.pendingDismissal = pending;
+	if (notification) notification.pendingAction = pending;
 }
 
 function applyServiceUpdate(model, update) {
@@ -68,5 +68,5 @@ export {
 	createInitialModel,
 	formatReceivedTime,
 	removeNotification,
-	setDismissalPending,
+	setActionPending,
 };

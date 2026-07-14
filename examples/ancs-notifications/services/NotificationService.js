@@ -7,8 +7,12 @@ class NotificationService {
 		throw new Error("NotificationService.start must be implemented by a concrete service.");
 	}
 
-	dismiss(_uid) {
-		throw new Error("NotificationService.dismiss must be implemented by a concrete service.");
+	performAction(_uid, _action) {
+		throw new Error("NotificationService.performAction must be implemented by a concrete service.");
+	}
+
+	dismiss(uid) {
+		return this.performAction(uid, "negative");
 	}
 
 	emit(update) {

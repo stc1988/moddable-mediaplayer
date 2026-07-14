@@ -8,6 +8,9 @@ const MOCK_NOTIFICATIONS = Object.freeze([
 		appName: "Layout Test",
 		title: "One-line body",
 		message: "This is one line.",
+		positiveActionLabel: "Open",
+		negativeActionLabel: "Clear",
+		hasPositiveAction: true,
 		hasNegativeAction: true,
 	},
 	{
@@ -15,6 +18,8 @@ const MOCK_NOTIFICATIONS = Object.freeze([
 		appName: "Layout Test",
 		title: "Two-line body",
 		message: "This is line one.\nThis is line two.",
+		negativeActionLabel: "Clear",
+		hasPositiveAction: false,
 		hasNegativeAction: true,
 	},
 	{
@@ -22,6 +27,8 @@ const MOCK_NOTIFICATIONS = Object.freeze([
 		appName: "Layout Test",
 		title: "Four-line body",
 		message: "This is line one.\nThis is line two.\nThis is line three.\nThis is line four.",
+		positiveActionLabel: "View",
+		hasPositiveAction: true,
 		hasNegativeAction: false,
 	},
 	{
@@ -29,6 +36,9 @@ const MOCK_NOTIFICATIONS = Object.freeze([
 		appName: "Weather",
 		title: "Rain starting soon",
 		message: "Rain is expected in your area within 20 minutes.",
+		positiveActionLabel: "View Forecast",
+		negativeActionLabel: "Dismiss",
+		hasPositiveAction: true,
 		hasNegativeAction: true,
 	},
 ]);
@@ -53,9 +63,12 @@ class MockNotificationService extends NotificationService {
 		Timer.repeat(() => this.addNextNotification(), 7000);
 	}
 
-	dismiss(uid) {
+	performAction(uid, action) {
 		const notification = this.notifications.get(uid);
-		if (!notification?.hasNegativeAction) return false;
+		const supported =
+			(action === "positive" && notification?.hasPositiveAction) ||
+			(action === "negative" && notification?.hasNegativeAction);
+		if (!supported) return false;
 		this.schedule(() => {
 			this.notifications.delete(uid);
 			this.emit({ removedUID: uid });

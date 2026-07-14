@@ -1,4 +1,4 @@
-import { applyServiceUpdate, setDismissalPending } from "NotificationModel";
+import { applyServiceUpdate, setActionPending } from "NotificationModel";
 
 function logNotification(event, notification) {
 	const appName = notification.appName ?? notification.appIdentifier ?? "unknown app";
@@ -40,16 +40,19 @@ class Controller {
 		this.notifyView();
 	}
 
-	onDismiss(uid) {
+	onAction(uid, action) {
 		const notification = this.model.notifications.find((item) => item.uid === uid);
-		if (!notification?.hasNegativeAction || notification.pendingDismissal) return;
+		const supported =
+			(action === "positive" && notification?.hasPositiveAction) ||
+			(action === "negative" && notification?.hasNegativeAction);
+		if (!supported || notification.pendingAction) return;
 
-		trace(`[notification] dismiss requested uid=${uid}\n`);
-		if (this.service.dismiss(uid)) {
-			setDismissalPending(this.model, uid, true);
+		trace(`[notification] ${action} action requested uid=${uid}\n`);
+		if (this.service.performAction(uid, action)) {
+			setActionPending(this.model, uid, true);
 			this.notifyView();
 		} else {
-			applyServiceUpdate(this.model, { error: "Dismiss action could not be sent" });
+			applyServiceUpdate(this.model, { error: `${action} action could not be sent` });
 			this.notifyView();
 		}
 	}

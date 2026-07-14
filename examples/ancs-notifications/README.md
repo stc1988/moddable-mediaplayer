@@ -1,8 +1,9 @@
 # Apple Notification Center Service notifications app
 
 A 240x320 Moddable Piu notification viewer for Apple Notification Center Service (ANCS). New iPhone notifications are
-added at the top of a scrollable stack. A red dismissal button sends the notification's ANCS negative action when that
-action is available. Each card shows the local time when the notification was received.
+added at the top of a scrollable stack. Green and red buttons send the notification's ANCS positive and negative actions
+when those actions are available. Buttons use the action label supplied by iOS when it fits, with `+` and `x` fallbacks.
+Each card shows the local time when the notification was received.
 The header shows the current local time beside the BLE connection icon.
 
 The simulator uses a mock notification service so the complete UI and dismissal flow can be tested without BLE
@@ -24,8 +25,8 @@ npm run debug:ancs:sim
 ```
 
 The mock connects automatically, adds sample notifications over time, and adds another notification every seven
-seconds. Tap the red `x` to verify that an actionable notification is removed. A gray `x` indicates that the source
-notification did not expose a negative action.
+seconds. Tap a green or red action button to verify that an actionable notification is removed. A gray button indicates
+that the source notification did not expose that action.
 
 Received and updated notification attributes, dismissal requests, and removals are written to the debugger log.
 
@@ -40,9 +41,9 @@ mcconfig -d -m -p esp32/moddable_two
 Open **Settings > Bluetooth** on the iPhone and pair with **Moddable Notifications**. After the client reconnects, allow
 notification sharing if iOS asks. Incoming and modified notifications then appear in the app.
 
-The app never performs an action automatically by default. Tapping an enabled dismissal button explicitly invokes
-`ANCSService.performAction(uid, "negative")`. Not every notification exposes that action, and the notification remains
-visible until iOS reports that it was removed.
+The app never performs an action automatically by default. Tapping an enabled action button explicitly invokes
+`ANCSService.performAction(uid, action)`. Not every notification exposes both actions, and the notification remains
+visible until iOS reports that it was removed or modified.
 
 For unattended hardware testing only, an explicit build setting can act on each supported notification:
 
@@ -66,5 +67,5 @@ sequenceDiagram
     Controller->>Model: applyServiceUpdate(model, update)
     Controller->>View: onModelChanged(model)
     View->>Controller: User taps dismiss
-    Controller->>Service: dismiss(uid)
+    Controller->>Service: performAction(uid, action)
 ```

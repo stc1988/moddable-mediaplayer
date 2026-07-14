@@ -9,6 +9,8 @@ const Colors = Object.freeze({
 	disconnected: "#9aa4af",
 	danger: "#ef5350",
 	dangerPressed: "#c93f3c",
+	success: "#1f9d55",
+	successPressed: "#157a40",
 	disabled: "#b6bec7",
 });
 
@@ -73,13 +75,19 @@ const Styles = Object.freeze({
 		horizontal: "left",
 		vertical: "top",
 	}),
-	delete: new Style({
+	positive: new Style({
+		font: "semibold 18px M PLUS 1",
+		color: [Colors.success, Colors.successPressed],
+		horizontal: "center",
+		vertical: "middle",
+	}),
+	negative: new Style({
 		font: "semibold 18px M PLUS 1",
 		color: [Colors.danger, Colors.dangerPressed],
 		horizontal: "center",
 		vertical: "middle",
 	}),
-	deleteDisabled: new Style({
+	actionDisabled: new Style({
 		font: "semibold 18px M PLUS 1",
 		color: Colors.disabled,
 		horizontal: "center",

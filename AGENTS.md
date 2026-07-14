@@ -10,6 +10,7 @@ modules/                 Reusable BLE protocol modules
 ├─ ams/
 └─ ancs/
 examples/                Independently buildable applications
+├─ assets/               Assets shared by multiple examples
 ├─ ams-media-player/
 └─ ancs-notifications/
 ```
@@ -35,6 +36,8 @@ guides only when changing shared BLE abstractions, repository structure, or cros
 - Keep UI and application-specific state adapters in `examples/<example>/`.
 - Give every module a manifest, README, and stable `moddablue/<service>/...` import names.
 - Keep examples buildable from their own directories; manifests must not depend on the repository name.
+- Keep byte-identical assets referenced by multiple examples in `examples/assets/`; keep app-specific assets inside the
+  example that owns them.
 - Add every module and example to the tables in the top-level README.
 - Document hardware requirements and a verified `mcconfig` command in each example README.
 - Prefer descriptive example directory names such as `<service>-<purpose>`.

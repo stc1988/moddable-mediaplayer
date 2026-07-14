@@ -21,7 +21,7 @@ for public APIs and include examples.
 | Example | Service | Target | Description |
 | --- | --- | --- | --- |
 | [`ams-media-player`](examples/ams-media-player/) | Apple Media Service (AMS) | simulator / ESP32 | 240x320 Piu media player. The simulator uses a mock service. |
-| [`ancs-notifications`](examples/ancs-notifications/) | Apple Notification Center Service (ANCS) | ESP32 | Retrieves iPhone notifications and performs notification actions. |
+| [`ancs-notifications`](examples/ancs-notifications/) | Apple Notification Center Service (ANCS) | simulator / ESP32 | 240x320 Piu notification viewer with mock data and dismissal actions. |
 
 Each example has its own `manifest.json`, includes reusable implementations from `modules/`, and can be built
 independently. See each example's README for hardware requirements, usage, and limitations.
@@ -39,6 +39,12 @@ To start the debugger:
 
 ```sh
 npm run debug:sim
+```
+
+### ANCS notifications in the simulator
+
+```sh
+npm run build:ancs:sim
 ```
 
 ### ANCS notifications on ESP32

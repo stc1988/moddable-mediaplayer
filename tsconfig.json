@@ -16,6 +16,7 @@
 		"strictNullChecks": false,
 		"paths": {
 			"MusicPlayerServiceProvider": ["./examples/ams-media-player/services/MockMusicPlayerService"],
+			"NotificationServiceProvider": ["./examples/ancs-notifications/services/MockNotificationService"],
 			"moddablue/ams/client": ["./modules/ams/AMSClient"],
 			"moddablue/ams/pairing-server": ["./modules/ams/AMSPairingServer"],
 			"moddablue/ancs/client": ["./modules/ancs/ANCSClient"],
@@ -26,6 +27,8 @@
 				"./examples/ams-media-player/components/*",
 				"./examples/ams-media-player/services/*",
 				"./examples/ancs-notifications/*",
+				"./examples/ancs-notifications/components/*",
+				"./examples/ancs-notifications/services/*",
 				"./modules/ams/*",
 				"./modules/ancs/*",
 				"./node_modules/@moddable/typings/*",

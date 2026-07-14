@@ -33,7 +33,7 @@
 	"resources": {
 		"*-mask": [
 			{
-				"source": "./assets/fonts/MPLUS1-Medium",
+				"source": "../assets/fonts/MPLUS1-Medium",
 				"size": 16,
 				"blocks": [
 					"Basic Latin",
@@ -48,7 +48,7 @@
 				]
 			},
 			{
-				"source": "./assets/fonts/MPLUS1-SemiBold",
+				"source": "../assets/fonts/MPLUS1-SemiBold",
 				"name": "MPLUS1-Semibold",
 				"size": 18,
 				"blocks": [
@@ -64,7 +64,7 @@
 				]
 			}
 		],
-		"*-alpha": ["./assets/masks/*"],
+		"*-alpha": ["./assets/masks/*", "../assets/masks/status-icons-mask"],
 		"*": ["$(MODDABLE)/modules/crypt/data/ca170"]
 	},
 	"platforms": {

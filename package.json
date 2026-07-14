@@ -5,7 +5,9 @@
 	"description": "Bluetooth Low Energy services and applications built with the Moddable SDK.",
 	"scripts": {
 		"build:sim": "cd examples/ams-media-player && mcconfig -d -m -p sim",
+		"build:ancs:sim": "cd examples/ancs-notifications && mcconfig -d -m -p sim",
 		"debug:sim": "cd examples/ams-media-player && mcconfig -dl -m -p sim",
+		"debug:ancs:sim": "cd examples/ancs-notifications && mcconfig -dl -m -p sim",
 		"format": "biome format --write .",
 		"format:check": "biome format .",
 		"lint": "biome lint .",

@@ -5,7 +5,13 @@ These instructions apply only to `examples/ancs-notifications/`.
 ## Boundaries
 
 - Keep reusable ANCS protocol, GATT, pairing, reconnect, and notification-state logic in `../../modules/ancs/`.
-- Keep `main.js` limited to example application behavior, logging, and explicit user or test actions.
+- Keep Piu UI code in `NotificationsView.js` and `components/`.
+- Keep application notification state centralized in `NotificationModel.js` and route touch input through
+  `NotificationsController.js`.
+- Keep ANCS and simulator adapters in `services/`; components must not call services directly.
+- Treat `NotificationService.js` as the common notification-service contract.
+- Use `MockNotificationService` for simulator builds and `ANCSNotificationService` only for ESP32 builds.
+- Do not include the ANCS module in the simulator platform path.
 - Import the ANCS module through `moddablue/ancs/service`; do not compile module source files directly in this manifest.
 - Keep unsupported platforms rejected explicitly in `manifest.json`.
 

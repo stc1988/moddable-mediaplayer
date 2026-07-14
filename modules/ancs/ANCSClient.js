@@ -43,8 +43,8 @@ const REQUESTED_ATTRIBUTES = Object.freeze([
 	[NotificationAttributeID.message, 384],
 	[NotificationAttributeID.messageSize],
 	[NotificationAttributeID.date],
-	[NotificationAttributeID.positiveActionLabel, 32],
-	[NotificationAttributeID.negativeActionLabel, 32],
+	[NotificationAttributeID.positiveActionLabel],
+	[NotificationAttributeID.negativeActionLabel],
 ]);
 const ATTRIBUTE_NAMES = Object.freeze([
 	"appIdentifier",

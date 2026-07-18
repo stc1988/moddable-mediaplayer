@@ -1,9 +1,12 @@
 import { ButtonBehavior } from "Behaviors";
 import { log } from "Logger";
 import { Skins } from "assets";
+import type { MediaPlayerModel } from "model";
+import type * as MC from "piu/MC";
+import "piu/MC";
 
 class ControlButtonBehavior extends ButtonBehavior {
-	onTap(_container) {
+	onTap(_container: MC.Container) {
 		log("ui", "control tapped", this.command);
 		if (this.controller) this.controller.onCommand(this.command);
 		else log("ui", "control ignored because controller is not attached", this.command);
@@ -58,8 +61,10 @@ const Controls = Row.template(($) => ({
 		}),
 	],
 	Behavior: class extends Behavior {
-		onModelChanged(row, model) {
-			row.first.next.first.skin = model.playback === "playing" ? Skins.pauseIcon : Skins.playIcon;
+		onModelChanged(row: MC.Row, model: MediaPlayerModel) {
+			const playButton = row.first?.next as MC.Container | null;
+			const icon = playButton?.first;
+			if (icon) icon.skin = model.playback === "playing" ? Skins.pauseIcon : Skins.playIcon;
 		}
 	},
 }));

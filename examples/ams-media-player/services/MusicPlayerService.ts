@@ -1,6 +1,14 @@
 import { log, logUpdate } from "Logger";
+import type { ModelUpdate } from "model";
+
+interface MusicPlayerServiceDelegate {
+	onServiceUpdate(update: ModelUpdate): void;
+}
 
 class MusicPlayerService {
+	declare delegate: MusicPlayerServiceDelegate | null;
+	declare logScope: string;
+
 	constructor() {
 		this.delegate = null;
 		this.logScope = "service";
@@ -26,18 +34,18 @@ class MusicPlayerService {
 	previousTrack() {
 		throw new Error("MusicPlayerService.previousTrack must be implemented by a concrete service.");
 	}
-	seekTo(_seconds) {
+	seekTo(_seconds: number) {
 		throw new Error("MusicPlayerService.seekTo must be implemented by a concrete service.");
 	}
-	setVolume(_volume) {
+	setVolume(_volume: number) {
 		throw new Error("MusicPlayerService.setVolume must be implemented by a concrete service.");
 	}
-	emit(update) {
+	emit(update: ModelUpdate) {
 		if (this.shouldLogUpdate(update)) logUpdate(this.logScope, "emit update", update);
 		if (this.delegate) this.delegate.onServiceUpdate(update);
 		else log(this.logScope, "update dropped because delegate is not attached");
 	}
-	shouldLogUpdate(update) {
+	shouldLogUpdate(update: ModelUpdate) {
 		const track = update?.track;
 		if (!track) return true;
 		return (
@@ -55,3 +63,4 @@ class MusicPlayerService {
 }
 
 export default MusicPlayerService;
+export type { MusicPlayerServiceDelegate };

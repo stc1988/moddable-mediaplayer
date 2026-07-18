@@ -58,8 +58,8 @@ mcconfig -d -m -p esp32/moddable_two ancsAction=negative
 sequenceDiagram
     participant Source as iPhone or mock
     participant Service as NotificationServiceProvider
-    participant Controller as NotificationsController.js
-    participant Model as NotificationModel.js
+    participant Controller as NotificationsController.ts
+    participant Model as NotificationModel.ts
     participant View as Piu components
 
     Source->>Service: Notification added, updated, or removed

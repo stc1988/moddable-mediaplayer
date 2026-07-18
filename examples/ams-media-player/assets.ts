@@ -1,3 +1,6 @@
+import type * as MC from "piu/MC";
+import "piu/MC";
+
 const Colors = Object.freeze({
 	background: "black",
 	panel: "#101418",
@@ -31,7 +34,7 @@ const Textures = Object.freeze({
 	statusIcons: new Texture("status-icons-mask.png"),
 });
 
-const iconSkin = (texture, color = Colors.text, size = 32) =>
+const iconSkin = (texture: MC.Texture, color: MC.Color = Colors.text, size = 32) =>
 	new Skin({
 		texture,
 		width: size,

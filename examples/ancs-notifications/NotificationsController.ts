@@ -1,6 +1,9 @@
+import type { Notification, NotificationAction, NotificationModel, ServiceUpdate } from "NotificationModel";
 import { applyServiceUpdate, setActionPending } from "NotificationModel";
+import type NotificationService from "NotificationService";
+import type * as MC from "piu/MC";
 
-function logNotification(event, notification) {
+function logNotification(event: "received" | "updated", notification: Notification) {
 	const appName = notification.appName ?? notification.appIdentifier ?? "unknown app";
 	trace(`[notification] ${event} at=${notification.receivedTime} uid=${notification.uid} app=${appName}\n`);
 	trace(`  title: ${notification.title ?? ""}\n`);
@@ -12,13 +15,17 @@ function logNotification(event, notification) {
 }
 
 class Controller {
-	constructor(model, service) {
+	declare model: NotificationModel;
+	declare service: NotificationService;
+	declare view: MC.Application | undefined;
+
+	constructor(model: NotificationModel, service: NotificationService) {
 		this.model = model;
 		this.service = service;
 		this.service.delegate = this;
 	}
 
-	attachView(view) {
+	attachView(view: MC.Application) {
 		this.view = view;
 		this.notifyView();
 	}
@@ -27,20 +34,21 @@ class Controller {
 		this.service.start();
 	}
 
-	onServiceUpdate(update) {
-		const wasKnown = update?.notification
-			? this.model.notifications.some((item) => item.uid === update.notification.uid)
+	onServiceUpdate(update: ServiceUpdate) {
+		const notificationUpdate = update.notification;
+		const wasKnown = notificationUpdate
+			? this.model.notifications.some((item) => item.uid === notificationUpdate.uid)
 			: false;
 		applyServiceUpdate(this.model, update);
-		if (update?.notification) {
-			const notification = this.model.notifications.find((item) => item.uid === update.notification.uid);
+		if (notificationUpdate) {
+			const notification = this.model.notifications.find((item) => item.uid === notificationUpdate.uid);
 			if (notification) logNotification(wasKnown ? "updated" : "received", notification);
 		}
 		if (update?.removedUID !== undefined) trace(`[notification] removed uid=${update.removedUID}\n`);
 		this.notifyView();
 	}
 
-	onAction(uid, action) {
+	onAction(uid: number, action: NotificationAction) {
 		const notification = this.model.notifications.find((item) => item.uid === uid);
 		const supported =
 			(action === "positive" && notification?.hasPositiveAction) ||

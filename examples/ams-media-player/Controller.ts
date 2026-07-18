@@ -1,17 +1,33 @@
 import ArtworkProvider, { createArtworkKey, DEFAULT_ALBUM_ART_SIZE } from "ArtworkProvider";
 import { isElapsedOnlyUpdate, log, logUpdate } from "Logger";
+import type MusicPlayerService from "MusicPlayerService";
+import type { MediaPlayerModel, ModelUpdate, Track } from "model";
 import { applyModelUpdate, ConnectionState, PlaybackState } from "model";
+import type * as MC from "piu/MC";
 import Timer from "timer";
 
+type PlayerCommand = "previous" | "next" | "playpause";
+
 class Controller {
-	constructor(model, service) {
+	static readonly ConnectionState = ConnectionState;
+	static readonly PlaybackState = PlaybackState;
+
+	declare model: MediaPlayerModel;
+	declare service: MusicPlayerService;
+	declare artworkProvider: ArtworkProvider;
+	declare view: MC.Application | undefined;
+	declare artworkKey: string | null | undefined;
+	declare artworkRequestID: number | undefined;
+	declare progressTimer: Timer | undefined;
+
+	constructor(model: MediaPlayerModel, service: MusicPlayerService) {
 		this.model = model;
 		this.service = service;
 		this.artworkProvider = new ArtworkProvider();
 		this.service.delegate = this;
 		log("controller", "created", service.constructor.name);
 	}
-	attachView(view) {
+	attachView(view: MC.Application) {
 		this.view = view;
 		log("controller", "view attached");
 		this.notifyView();
@@ -25,7 +41,7 @@ class Controller {
 		this.stopProgressTimer();
 		this.service.stop();
 	}
-	onServiceUpdate(update) {
+	onServiceUpdate(update: ModelUpdate) {
 		const silent = isElapsedOnlyUpdate(update);
 		if (!silent) logUpdate("controller", "service update received", update);
 		const shouldFetchArtwork = this.shouldFetchArtwork(update);
@@ -35,11 +51,11 @@ class Controller {
 		this.syncProgressTimer();
 		this.notifyView({ silent });
 	}
-	shouldFetchArtwork(update) {
+	shouldFetchArtwork(update: ModelUpdate) {
 		const track = update?.track;
 		return track?.artist !== undefined || track?.album !== undefined;
 	}
-	shouldClearArtworkRequest(update) {
+	shouldClearArtworkRequest(update: ModelUpdate) {
 		if (update?.artwork === null) return true;
 		if (!update?.track) return false;
 		return !this.model.track.artist && !this.model.track.album && !this.model.track.title;
@@ -48,7 +64,7 @@ class Controller {
 		this.artworkKey = null;
 		this.artworkRequestID = (this.artworkRequestID || 0) + 1;
 	}
-	fetchArtwork(track) {
+	fetchArtwork(track: Track) {
 		const key = createArtworkKey(track);
 		if (!track.artist || !track.album || this.artworkKey === key) return;
 		if (!this.model.network.connected) {
@@ -82,7 +98,7 @@ class Controller {
 				this.notifyView();
 			});
 	}
-	onCommand(command) {
+	onCommand(command: PlayerCommand) {
 		log("controller", "command received", command);
 		if (command === "previous") {
 			log("controller", "dispatch previousTrack");
@@ -97,11 +113,11 @@ class Controller {
 			log("controller", "unknown command ignored", command);
 		}
 	}
-	onSeekTo(seconds) {
+	onSeekTo(seconds: number) {
 		log("controller", "seek requested", seconds);
 		this.service.seekTo(seconds);
 	}
-	onVolumeChange(volume) {
+	onVolumeChange(volume: number) {
 		log("controller", "volume requested", volume);
 		this.service.setVolume(volume);
 	}
@@ -140,7 +156,7 @@ class Controller {
 		Timer.clear(this.progressTimer);
 		this.progressTimer = undefined;
 	}
-	notifyView(options) {
+	notifyView(options: { silent?: boolean } = {}) {
 		if (!options?.silent) {
 			log(
 				"controller",
@@ -152,7 +168,5 @@ class Controller {
 	}
 }
 
-Controller.ConnectionState = ConnectionState;
-Controller.PlaybackState = PlaybackState;
-
 export default Controller;
+export type { PlayerCommand };

@@ -1,3 +1,5 @@
+import "piu/MC";
+
 const Colors = Object.freeze({
 	background: "#eef2f6",
 	header: "#f8fafc",

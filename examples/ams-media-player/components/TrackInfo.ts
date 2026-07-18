@@ -1,4 +1,7 @@
 import { Colors, Styles } from "assets";
+import type { MediaPlayerModel } from "model";
+import type * as MC from "piu/MC";
+import "piu/MC";
 
 const TITLE_HEIGHT = 24;
 const TITLE_START_HOLD_MS = 1800;
@@ -6,6 +9,17 @@ const TITLE_END_HOLD_MS = 900;
 const TITLE_SCROLL_PIXELS_PER_SECOND = 25;
 const TITLE_SCROLL_INSET = 16;
 const TITLE_SCROLL_GAP = 32;
+
+interface TitleAnchors {
+	TITLE_CENTER: MC.Label;
+	TITLE_SCROLL: MC.Label;
+	TITLE_SCROLL_NEXT: MC.Label;
+}
+
+interface TrackInfoAnchors {
+	TITLE: MC.Container;
+	ARTIST: MC.Label;
+}
 
 const TitleScrollStyle = new Style({
 	font: "semibold 18px M PLUS 1",
@@ -40,17 +54,23 @@ const TitleMarquee = Container.template(($) => ({
 		}),
 	],
 	Behavior: class extends Behavior {
-		onCreate(_container, anchors) {
+		declare anchors: TitleAnchors;
+		declare title: string;
+		declare textWidth: number;
+		declare scrollDistance: number;
+		declare scrollDuration: number;
+
+		onCreate(_container: MC.Container, anchors: TitleAnchors) {
 			this.anchors = anchors;
 			this.title = "";
 			this.textWidth = 0;
 			this.scrollDistance = 0;
 			this.scrollDuration = 0;
 		}
-		onDisplaying(container) {
+		onDisplaying(container: MC.Container) {
 			this.layout(container);
 		}
-		onFinished(container) {
+		onFinished(container: MC.Container) {
 			if (!this.scrollDistance) return;
 
 			container.time = 0;
@@ -58,7 +78,7 @@ const TitleMarquee = Container.template(($) => ({
 			this.anchors.TITLE_SCROLL_NEXT.x = TITLE_SCROLL_INSET + this.textWidth + TITLE_SCROLL_GAP;
 			container.start();
 		}
-		onTimeChanged(container) {
+		onTimeChanged(container: MC.Container) {
 			if (!this.scrollDistance) return;
 
 			const label = this.anchors.TITLE_SCROLL;
@@ -66,7 +86,7 @@ const TitleMarquee = Container.template(($) => ({
 			const time = container.time;
 			const scrollStart = TITLE_START_HOLD_MS;
 			const scrollEnd = scrollStart + this.scrollDuration;
-			let x;
+			let x: number;
 
 			if (time < scrollStart) {
 				x = TITLE_SCROLL_INSET;
@@ -78,19 +98,19 @@ const TitleMarquee = Container.template(($) => ({
 			label.x = x;
 			next.x = x + this.textWidth + TITLE_SCROLL_GAP;
 		}
-		setTitle(container, title) {
+		setTitle(container: MC.Container, title: string) {
 			if (title === this.title) return;
 
 			this.title = title;
 			this.layout(container);
 		}
-		layout(container) {
+		layout(container: MC.Container) {
 			const center = this.anchors.TITLE_CENTER;
 			const scroll = this.anchors.TITLE_SCROLL;
 			const next = this.anchors.TITLE_SCROLL_NEXT;
 			const title = this.title;
 			const containerWidth = container.width;
-			const textWidth = Math.ceil(Styles.title.measure(title).width);
+			const textWidth = Math.ceil(Styles.title.measure(title).width ?? 0);
 
 			container.stop();
 			container.time = 0;
@@ -127,10 +147,12 @@ const TitleMarquee = Container.template(($) => ({
 const TrackInfo = Column.template(($) => ({
 	contents: [TitleMarquee($), Label($, { anchor: "ARTIST", left: 0, right: 0, height: 18, style: Styles.mutedCenter })],
 	Behavior: class extends Behavior {
-		onCreate(_column, anchors) {
+		declare anchors: TrackInfoAnchors;
+
+		onCreate(_column: MC.Column, anchors: TrackInfoAnchors) {
 			this.anchors = anchors;
 		}
-		onModelChanged(_column, model) {
+		onModelChanged(_column: MC.Column, model: MediaPlayerModel) {
 			const anchors = this.anchors;
 			anchors.TITLE.delegate("setTitle", model.track.title);
 			anchors.ARTIST.string = model.track.artist;

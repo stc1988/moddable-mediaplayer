@@ -23,7 +23,7 @@ service.start();
 ```
 
 Low-level APIs are also available as `moddablue/ancs/client` and `moddablue/ancs/pairing-server`. See
-[`examples/ancs-notifications/main.js`](../../examples/ancs-notifications/main.js) for delegate callbacks and notification
+[`examples/ancs-notifications/main.ts`](../../examples/ancs-notifications/main.ts) for delegate callbacks and notification
 action examples.
 
 Control Point failures defined by ANCS are reported to `onANCSError` as `ANCSControlPointError` instances. Their `code`

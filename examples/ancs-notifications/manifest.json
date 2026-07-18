@@ -1,5 +1,9 @@
 {
-	"include": ["$(MODDABLE)/examples/manifest_base.json", "$(MODDABLE)/examples/manifest_piu.json"],
+	"include": [
+		"$(MODDABLE)/examples/manifest_base.json",
+		"$(MODDABLE)/examples/manifest_piu.json",
+		"$(MODDABLE)/examples/manifest_typings.json"
+	],
 	"modules": {
 		"*": [
 			"./main",
@@ -59,6 +63,14 @@
 			"initial": 4096
 		},
 		"stack": 512
+	},
+	"typescript": {
+		"tsconfig": {
+			"compilerOptions": {
+				"lib": ["es2024", "esnext.disposable"],
+				"target": "ES2024"
+			}
+		}
 	},
 	"platforms": {
 		"sim": {

@@ -1,6 +1,16 @@
 import { Skins, Styles } from "NotificationAssets";
+import type { NotificationModel } from "NotificationModel";
 import { formatReceivedTime } from "NotificationModel";
+import type * as MC from "piu/MC";
+import "piu/MC";
 import Timer from "timer";
+
+interface HeaderAnchors {
+	TITLE: MC.Label;
+	TIME: MC.Label;
+	STATUS_ICON: MC.Content;
+	COUNT: MC.Label;
+}
 
 const Header = Container.template(($) => ({
 	skin: Skins.header,
@@ -44,7 +54,10 @@ const Header = Container.template(($) => ({
 		}),
 	],
 	Behavior: class extends Behavior {
-		onCreate(_container, data) {
+		declare anchors: HeaderAnchors;
+		declare clockTimer: Timer | undefined;
+
+		onCreate(_container: MC.Container, data: HeaderAnchors) {
 			this.anchors = data;
 		}
 
@@ -63,7 +76,7 @@ const Header = Container.template(($) => ({
 			this.anchors.TIME.string = formatReceivedTime(Date.now());
 		}
 
-		onModelChanged(_container, model) {
+		onModelChanged(_container: MC.Container, model: NotificationModel) {
 			this.anchors.STATUS_ICON.state = model.connection === "connected" ? 1 : 0;
 			const count = model.notifications.length;
 			this.anchors.COUNT.string = `${count} ${count === 1 ? "alert" : "alerts"}`;

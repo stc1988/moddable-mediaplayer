@@ -1,6 +1,7 @@
 import { Skins } from "NotificationAssets";
 import Header from "NotificationHeader";
 import NotificationList from "NotificationList";
+import "piu/MC";
 
 const NotificationsApplication = Application.template(($) => ({
 	skin: Skins.app,

@@ -1,6 +1,10 @@
 import { SliderBehavior } from "Behaviors";
+import type Controller from "Controller";
 import { log } from "Logger";
 import { Skins, Styles } from "assets";
+import type { MediaPlayerModel } from "model";
+import type * as MC from "piu/MC";
+import "piu/MC";
 
 const TRACK_LEFT = 46;
 const TRACK_RIGHT = 46;
@@ -12,7 +16,16 @@ const KNOB_SIZE = 10;
 const KNOB_ACTIVE_SIZE = 16;
 const KNOB_CENTER_Y = 9;
 
-function formatTime(seconds) {
+interface ProgressAnchors {
+	controller: Controller;
+	ELAPSED: MC.Label;
+	DURATION: MC.Label;
+	PROGRESS_TRACK: MC.Content;
+	PROGRESS_FILL: MC.Content;
+	PROGRESS_KNOB: MC.Content;
+}
+
+function formatTime(seconds: number) {
 	seconds = Math.max(0, Math.floor(seconds || 0));
 	const minutes = Math.floor(seconds / 60);
 	const rest = seconds % 60;
@@ -43,13 +56,16 @@ const Progress = Container.template(($) => ({
 		Content($, { anchor: "PROGRESS_KNOB", left: TRACK_LEFT, top: 4, width: 10, height: 10, skin: Skins.knobInactive }),
 		Label($, { anchor: "DURATION", right: 0, top: 0, width: 38, height: 18, style: Styles.time }),
 	],
-	Behavior: class extends SliderBehavior {
-		onCreate(_container, data) {
+	Behavior: class extends SliderBehavior<ProgressAnchors> {
+		declare progressWidth: number | undefined;
+		declare duration: number | undefined;
+
+		onCreate(_container: MC.Container, data: ProgressAnchors) {
 			super.onCreate(_container, data);
 			this.trackLeft = TRACK_LEFT;
 			this.trackRight = TRACK_RIGHT;
 		}
-		setActive(active) {
+		setActive(active: boolean) {
 			this.active = active;
 			this.updateTrack();
 			this.anchors.PROGRESS_FILL.skin = active ? Skins.sliderFillActive : Skins.sliderFillInactive;
@@ -64,15 +80,15 @@ const Progress = Container.template(($) => ({
 				right: TRACK_RIGHT,
 				top,
 				height,
-			};
+			} as MC.Coordinates;
 			this.anchors.PROGRESS_FILL.coordinates = {
 				left: TRACK_LEFT,
 				top,
 				width: this.progressWidth || 0,
 				height,
-			};
+			} as MC.Coordinates;
 		}
-		onValueChanging(container, fraction) {
+		onValueChanging(container: MC.Container, fraction: number) {
 			const duration = this.duration || 0;
 			if (!duration || !this.controller) {
 				log("progress", "seek ignored", `duration=${duration} controller=${this.controller ? "attached" : "missing"}`);
@@ -82,14 +98,14 @@ const Progress = Container.template(($) => ({
 			log("progress", "seek preview", `elapsed=${elapsed} duration=${duration} fraction=${fraction}`);
 			this.updateProgress(container, elapsed, duration);
 		}
-		onValueChanged(_container, fraction) {
+		onValueChanged(_container: MC.Container, fraction: number) {
 			const duration = this.duration || 0;
 			if (!duration || !this.controller) return;
 			const elapsed = Math.round(duration * fraction);
 			log("progress", "seek commit", `elapsed=${elapsed} duration=${duration} fraction=${fraction}`);
 			this.controller.onSeekTo(elapsed);
 		}
-		updateProgress(container, elapsed, duration) {
+		updateProgress(container: MC.Container, elapsed: number, duration: number) {
 			const trackWidth = container.width - TRACK_LEFT - TRACK_RIGHT;
 			const width = duration ? Math.round((trackWidth * elapsed) / duration) : 0;
 			this.anchors.PROGRESS_FILL.width = width;
@@ -99,16 +115,16 @@ const Progress = Container.template(($) => ({
 			this.anchors.ELAPSED.string = formatTime(elapsed);
 			this.anchors.DURATION.string = formatTime(duration);
 		}
-		updateProgressKnob(width) {
+		updateProgressKnob(width: number) {
 			const size = this.active ? KNOB_ACTIVE_SIZE : KNOB_SIZE;
 			this.anchors.PROGRESS_KNOB.coordinates = {
 				left: TRACK_LEFT + width - (size >> 1),
 				top: KNOB_CENTER_Y - (size >> 1),
 				width: size,
 				height: size,
-			};
+			} as MC.Coordinates;
 		}
-		onModelChanged(container, model) {
+		onModelChanged(container: MC.Container, model: MediaPlayerModel) {
 			if (this.dragging) return;
 			const duration = model.track.duration || 0;
 			const elapsed = Math.min(model.track.elapsed || 0, duration);

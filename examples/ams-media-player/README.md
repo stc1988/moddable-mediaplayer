@@ -50,9 +50,9 @@ Album artwork is downloaded as JPEG data through the iTunes Search API, so artwo
 sequenceDiagram
     participant Target as Music player target
     participant Service as MusicPlayerServiceProvider
-    participant Controller as Controller.js
-    participant Model as model.js
-    participant View as View.js
+    participant Controller as Controller.ts
+    participant Model as model.ts
+    participant View as View.ts
     participant Components as components/*
 
     Target->>Service: Playback, track, volume, or device update
@@ -62,5 +62,5 @@ sequenceDiagram
     View->>Components: onModelChanged(model)
 ```
 
-Components send touch intent to `Controller.js`. The controller invokes the common `MusicPlayerService` API; components
+Components send touch intent to `Controller.ts`. The controller invokes the common `MusicPlayerService` API; components
 never call BLE, AMS, HTTP, mock, or artwork services directly.

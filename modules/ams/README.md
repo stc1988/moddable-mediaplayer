@@ -20,7 +20,7 @@ import { AMSClient, RemoteCommandID } from "moddablue/ams/client";
 import AMSPairingServer from "moddablue/ams/pairing-server";
 ```
 
-See [`examples/ams-media-player/services/AMSMusicPlayerService.js`](../../examples/ams-media-player/services/AMSMusicPlayerService.js)
+See [`examples/ams-media-player/services/AMSMusicPlayerService.ts`](../../examples/ams-media-player/services/AMSMusicPlayerService.ts)
 for a working example of the `AMSClient` delegate callbacks and state format.
 
 The module manifest also includes the Moddable manifests required for BLE central, BLE peripheral, and `TextDecoder`.

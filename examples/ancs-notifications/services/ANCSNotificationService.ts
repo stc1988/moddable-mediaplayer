@@ -1,3 +1,4 @@
+import type { NotificationAction, NotificationInput } from "NotificationModel";
 import { ConnectionState } from "NotificationModel";
 import NotificationService from "NotificationService";
 import config from "mc/config";
@@ -5,16 +6,18 @@ import ANCSService from "moddablue/ancs/service";
 import Timer from "timer";
 
 class ANCSNotificationService extends NotificationService {
+	declare service: ANCSService | undefined;
+
 	start() {
 		this.service = new ANCSService(this, { deviceName: "Moddable Notifications" });
 		this.service.start();
 	}
 
-	performAction(uid, action) {
+	performAction(uid: number, action: NotificationAction) {
 		return this.service?.performAction(uid, action) ?? false;
 	}
 
-	onANCSStatus(status) {
+	onANCSStatus(status: string) {
 		const connecting = status === "pairing" || status === "paired" || status === "reconnecting";
 		this.emit({
 			connection: connecting ? ConnectionState.CONNECTING : ConnectionState.DISCONNECTED,
@@ -31,7 +34,7 @@ class ANCSNotificationService extends NotificationService {
 		this.emit({ connection: ConnectionState.CONNECTED, status: "iPhone connected", error: undefined });
 	}
 
-	onANCSNotification(notification) {
+	onANCSNotification(notification: NotificationInput) {
 		this.emit({ notification });
 
 		const action = config.ancsAction;
@@ -41,7 +44,7 @@ class ANCSNotificationService extends NotificationService {
 		if (supported) Timer.set(() => this.service?.performAction(notification.uid, action), 1000);
 	}
 
-	onANCSNotificationRemoved(notification) {
+	onANCSNotificationRemoved(notification: { uid: number }) {
 		this.emit({ removedUID: notification.uid });
 	}
 
@@ -49,7 +52,7 @@ class ANCSNotificationService extends NotificationService {
 		this.emit({ clearNotifications: true });
 	}
 
-	onANCSError(error) {
+	onANCSError(error: unknown) {
 		this.emit({ status: "ANCS error", error });
 	}
 }

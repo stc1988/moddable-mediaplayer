@@ -5,6 +5,7 @@ import StatusHeader from "StatusHeader";
 import TrackInfo from "TrackInfo";
 import Volume from "Volume";
 import { Layout } from "assets";
+import "piu/MC";
 
 const MusicPlayer = Container.template(($) => ({
 	contents: [

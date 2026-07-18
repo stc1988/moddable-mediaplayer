@@ -2,19 +2,28 @@ import { log } from "Logger";
 import extractThemeColorsFromBitmap from "ThemeColorExtractor";
 import { Skins } from "assets";
 import loadJPEG from "commodetto/loadJPEG";
+import type { MediaPlayerModel } from "model";
+import type * as MC from "piu/MC";
+import "piu/MC";
 
 const FALLBACK_TOP = "#101418";
 const MIN_TOP_LUMA = 82;
 
-const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+interface RGB {
+	r: number;
+	g: number;
+	b: number;
+}
 
-const toHex = (component) => clamp(component, 0, 255).toString(16).padStart(2, "0");
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
-const rgbToHex = ({ r, g, b }) => `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+const toHex = (component: number) => clamp(component, 0, 255).toString(16).padStart(2, "0");
 
-const luma = ({ r, g, b }) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+const rgbToHex = ({ r, g, b }: RGB) => `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 
-function brightenForBackground(color, minimumLuma) {
+const luma = ({ r, g, b }: RGB) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+function brightenForBackground(color: RGB, minimumLuma: number): RGB {
 	const current = luma(color);
 	if (current >= minimumLuma) return color;
 
@@ -26,8 +35,8 @@ function brightenForBackground(color, minimumLuma) {
 	};
 }
 
-function extractBackgroundColor(data) {
-	const bitmap = loadJPEG(data);
+function extractBackgroundColor(data: ArrayBuffer): RGB | undefined {
+	const bitmap = loadJPEG(data) as ReturnType<typeof loadJPEG> & { buffer: ByteBuffer };
 	const colors = extractThemeColorsFromBitmap(bitmap);
 	if (!colors) return undefined;
 	const color = new Uint8Array(colors);
@@ -38,11 +47,14 @@ const Background = Container.template(($) => ({
 	skin: new Skin({ fill: FALLBACK_TOP }),
 	contents: [Content($, { left: 0, right: 0, top: 0, bottom: 0, skin: Skins.backgroundGradient })],
 	Behavior: class extends Behavior {
-		onCreate(_container) {
+		declare key: string | null;
+		declare color: string;
+
+		onCreate(_container: MC.Container) {
 			this.key = null;
 			this.color = FALLBACK_TOP;
 		}
-		onModelChanged(container, model) {
+		onModelChanged(container: MC.Container, model: MediaPlayerModel) {
 			const artwork = model.artwork;
 			if (artwork?.state !== "loaded" || !artwork.data) {
 				if (this.key === null) return;

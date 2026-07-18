@@ -1,17 +1,22 @@
 import { log } from "Logger";
 import { Layout, Skins } from "assets";
 import loadJPEG from "commodetto/loadJPEG";
-import { ImageBuffer } from "piu/ImageBuffer";
+import type { MediaPlayerModel } from "model";
+import "piu/ImageBuffer";
+import type * as MC from "piu/MC";
+import "piu/MC";
 
 const ARTWORK_WIDTH = Layout.artwork.width;
 const ARTWORK_HEIGHT = Layout.artwork.height;
 
 class ArtworkImageBehavior extends Behavior {
-	onCreate(image) {
+	declare key: string | null;
+
+	onCreate(image: MC.Content) {
 		this.key = null;
 		image.visible = false;
 	}
-	onModelChanged(image, model) {
+	onModelChanged(image: MC.Content & { buffer: ByteBuffer }, model: MediaPlayerModel) {
 		const artwork = model.artwork;
 		if (artwork?.state !== "loaded" || !artwork.data) {
 			this.key = null;
@@ -21,7 +26,7 @@ class ArtworkImageBehavior extends Behavior {
 		if (this.key === artwork.key) return;
 		this.key = artwork.key;
 		try {
-			const bitmap = loadJPEG(artwork.data);
+			const bitmap = loadJPEG(artwork.data) as ReturnType<typeof loadJPEG> & { buffer: ByteBuffer };
 			image.buffer = bitmap.buffer;
 			image.visible = true;
 			log("artwork", "decoded", `${artwork.key} ${bitmap.width}x${bitmap.height}`);
@@ -55,10 +60,12 @@ const Artwork = Container.template(($) => ({
 		}),
 	],
 	Behavior: class extends Behavior {
-		onCreate(_container, anchors) {
+		declare anchors: { PLACEHOLDER: MC.Content };
+
+		onCreate(_container: MC.Container, anchors: { PLACEHOLDER: MC.Content }) {
 			this.anchors = anchors;
 		}
-		onModelChanged(_container, model) {
+		onModelChanged(_container: MC.Container, model: MediaPlayerModel) {
 			const loaded = model.artwork?.state === "loaded" && model.artwork.data;
 			this.anchors.PLACEHOLDER.visible = !loaded;
 		}

@@ -1,8 +1,9 @@
+import type { NotificationAction, NotificationInput } from "NotificationModel";
 import { ConnectionState } from "NotificationModel";
 import NotificationService from "NotificationService";
 import Timer from "timer";
 
-const MOCK_NOTIFICATIONS = Object.freeze([
+const MOCK_NOTIFICATIONS: readonly Omit<NotificationInput, "uid">[] = Object.freeze([
 	{
 		appIdentifier: "com.moddablue.layout-test",
 		appName: "Layout Test",
@@ -44,6 +45,11 @@ const MOCK_NOTIFICATIONS = Object.freeze([
 ]);
 
 class MockNotificationService extends NotificationService {
+	declare notifications: Map<number, NotificationInput>;
+	declare nextUID: number;
+	declare sampleIndex: number;
+	declare timers: Timer[];
+
 	constructor() {
 		super();
 		this.notifications = new Map();
@@ -63,7 +69,7 @@ class MockNotificationService extends NotificationService {
 		Timer.repeat(() => this.addNextNotification(), 7000);
 	}
 
-	performAction(uid, action) {
+	performAction(uid: number, action: NotificationAction) {
 		const notification = this.notifications.get(uid);
 		const supported =
 			(action === "positive" && notification?.hasPositiveAction) ||
@@ -81,11 +87,12 @@ class MockNotificationService extends NotificationService {
 		this.sampleIndex += 1;
 		const notification = { ...sample, uid: this.nextUID++ };
 		this.notifications.set(notification.uid, notification);
-		if (this.notifications.size > 20) this.notifications.delete(this.notifications.keys().next().value);
+		const oldestUID = this.notifications.keys().next().value;
+		if (this.notifications.size > 20 && oldestUID !== undefined) this.notifications.delete(oldestUID);
 		this.emit({ notification });
 	}
 
-	schedule(callback, delay) {
+	schedule(callback: () => void, delay: number) {
 		const timer = Timer.set(() => {
 			const index = this.timers.indexOf(timer);
 			if (index >= 0) this.timers.splice(index, 1);

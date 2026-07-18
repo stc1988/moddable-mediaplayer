@@ -1,27 +1,38 @@
 import { log } from "Logger";
 import fetch from "fetch";
+import type { Artwork, Track } from "model";
 
 const DEFAULT_ALBUM_ART_SIZE = 128;
 const ITUNES_SEARCH_ENDPOINT = "https://itunes.apple.com/search";
 
-function normalize(value) {
+interface ArtworkProviderDelegate {
+	onArtworkUrl?(url: string | undefined, track: Track): void;
+}
+
+interface ITunesResult {
+	artworkUrl100?: string;
+	artistName?: string;
+	collectionName?: string;
+}
+
+function normalize(value: string) {
 	return value.trim().toLowerCase();
 }
 
-function validateRequest(artist, album, size) {
+function validateRequest(artist: string, album: string, size: number) {
 	if (!artist || !album) throw new TypeError("artist and album are required");
 	if (!Number.isInteger(size) || size <= 0) throw new RangeError("size must be a positive integer");
 }
 
-function resizeArtworkUrl(url, size) {
+function resizeArtworkUrl(url: string, size: number) {
 	return url.replace(/100x100bb/, `${size}x${size}cc`);
 }
 
-function createArtworkKey(track) {
+function createArtworkKey(track: Pick<Track, "artist" | "album">) {
 	return `${normalize(track.artist || "")}|${normalize(track.album || "")}`;
 }
 
-async function fetchAlbumArtUrl(artist, album, size = DEFAULT_ALBUM_ART_SIZE) {
+async function fetchAlbumArtUrl(artist: string, album: string, size = DEFAULT_ALBUM_ART_SIZE) {
 	validateRequest(artist, album, size);
 
 	const expectedArtist = normalize(artist);
@@ -31,7 +42,7 @@ async function fetchAlbumArtUrl(artist, album, size = DEFAULT_ALBUM_ART_SIZE) {
 	const response = await fetch(url);
 	if (!response.ok) throw new Error(`iTunes Search API returned HTTP ${response.status}`);
 
-	const data = await response.json();
+	const data = (await response.json()) as { results?: ITunesResult[] };
 	const results = data.results ?? [];
 	const result =
 		results.find(
@@ -41,20 +52,23 @@ async function fetchAlbumArtUrl(artist, album, size = DEFAULT_ALBUM_ART_SIZE) {
 				entry.collectionName?.trim().toLowerCase() === expectedAlbum,
 		) ?? results.find((entry) => entry.artworkUrl100);
 
-	return result ? resizeArtworkUrl(result.artworkUrl100, size) : undefined;
+	const artworkURL = result?.artworkUrl100;
+	return artworkURL ? resizeArtworkUrl(artworkURL, size) : undefined;
 }
 
-async function fetchArtworkData(url) {
+async function fetchArtworkData(url: string) {
 	const response = await fetch(url);
 	if (!response.ok) throw new Error(`artwork image returned HTTP ${response.status}`);
 	return response.arrayBuffer();
 }
 
 class ArtworkProvider {
+	declare delegate: ArtworkProviderDelegate | null;
+
 	constructor() {
 		this.delegate = null;
 	}
-	async fetch(track, size = DEFAULT_ALBUM_ART_SIZE) {
+	async fetch(track: Track, size = DEFAULT_ALBUM_ART_SIZE): Promise<Artwork> {
 		const key = createArtworkKey(track);
 		log("artwork", "lookup start", key);
 		const url = await fetchAlbumArtUrl(track.artist, track.album, size);
@@ -68,11 +82,11 @@ class ArtworkProvider {
 		const downloadStarted = Date.now();
 		const data = await fetchArtworkData(url);
 		log("artwork", "download complete", `${key} bytes=${data.byteLength} ms=${Date.now() - downloadStarted}`);
-		const artwork = { key, state: "loaded", url, data };
+		const artwork: Artwork = { key, state: "loaded", url, data };
 		if (this.delegate) this.delegate.onArtworkUrl?.(url, track);
 		return artwork;
 	}
-	async fetchAlbumArtUrl(artist, album, size = DEFAULT_ALBUM_ART_SIZE) {
+	async fetchAlbumArtUrl(artist: string, album: string, size = DEFAULT_ALBUM_ART_SIZE) {
 		return fetchAlbumArtUrl(artist, album, size);
 	}
 	cancel() {}

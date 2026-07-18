@@ -1,6 +1,7 @@
 import Background from "Background";
 import MusicPlayer from "MusicPlayer";
 import { Layout, Skins } from "assets";
+import "piu/MC";
 
 const MediaPlayerApplication = Application.template(($) => ({
 	skin: Skins.app,

@@ -2,6 +2,7 @@
 	"include": [
 		"$(MODDABLE)/examples/manifest_base.json",
 		"$(MODDABLE)/examples/manifest_piu.json",
+		"$(MODDABLE)/examples/manifest_typings.json",
 		"$(MODDABLE)/examples/manifest_commodetto.json",
 		"$(MODDABLE)/examples/manifest_net.json",
 		"$(MODDABLE)/modules/piu/MC/imageBuffer/manifest.json",
@@ -14,6 +15,14 @@
 	},
 	"creation": {
 		"stack": 512
+	},
+	"typescript": {
+		"tsconfig": {
+			"compilerOptions": {
+				"lib": ["es2024", "esnext.disposable"],
+				"target": "ES2024"
+			}
+		}
 	},
 	"modules": {
 		"*": [
@@ -35,14 +44,12 @@
 			{
 				"source": "../assets/fonts/MPLUS1-Medium",
 				"size": 16,
-				"blocks": [],
 				"characterFiles": "../assets/fonts/MPLUS1-chars.txt"
 			},
 			{
 				"source": "../assets/fonts/MPLUS1-SemiBold",
 				"name": "MPLUS1-Semibold",
 				"size": 18,
-				"blocks": [],
 				"characterFiles": "../assets/fonts/MPLUS1-chars.txt"
 			}
 		],

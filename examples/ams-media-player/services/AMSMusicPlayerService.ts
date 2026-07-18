@@ -1,7 +1,9 @@
 import { log } from "Logger";
 import MusicPlayerService from "MusicPlayerService";
+import type { AMSState } from "moddablue/ams/client";
 import { AMSClient, RemoteCommandID } from "moddablue/ams/client";
 import AMSPairingServer from "moddablue/ams/pairing-server";
+import type { ModelUpdate, PlaybackStateValue, TrackUpdate } from "model";
 import { ConnectionState, createEmptyTrack, PlaybackState } from "model";
 
 const AMS_PLAYBACK_STATE = Object.freeze({
@@ -11,19 +13,29 @@ const AMS_PLAYBACK_STATE = Object.freeze({
 	FAST_FORWARDING: 3,
 });
 
-function mapPlaybackState(state) {
+interface LastEmitted {
+	playback?: PlaybackStateValue;
+	volume?: number;
+	track: TrackUpdate;
+}
+
+function mapPlaybackState(state: number | undefined): PlaybackStateValue {
 	if (state === AMS_PLAYBACK_STATE.PLAYING) return PlaybackState.PLAYING;
 	if (state === AMS_PLAYBACK_STATE.PAUSED) return PlaybackState.PAUSED;
 	return PlaybackState.UNKNOWN;
 }
 
-function applyChanged(target, name, value) {
+function applyChanged<T extends object, K extends keyof T>(target: T, name: K, value: T[K]) {
 	if (value === undefined || target[name] === value) return false;
 	target[name] = value;
 	return true;
 }
 
 class AMSMusicPlayerService extends MusicPlayerService {
+	declare lastEmitted: LastEmitted | undefined;
+	declare client: AMSClient | undefined;
+	declare pairingServer: AMSPairingServer | undefined;
+
 	constructor() {
 		super();
 		this.logScope = "ams-service";
@@ -48,7 +60,7 @@ class AMSMusicPlayerService extends MusicPlayerService {
 					playerConnection: ConnectionState.CONNECTING,
 					device: { name: "Apple Media Service", status: "Connecting" },
 				});
-				this.client.connect(address);
+				this.client?.connect(address);
 			},
 		});
 	}
@@ -82,10 +94,10 @@ class AMSMusicPlayerService extends MusicPlayerService {
 		log("ams-service", "remote command", "PREVIOUS_TRACK");
 		this.client?.remoteCommand(RemoteCommandID.PREVIOUS_TRACK);
 	}
-	seekTo(seconds) {
+	seekTo(seconds: number) {
 		log("ams-service", "seekTo unsupported by AMS remote command", seconds);
 	}
-	setVolume(volume) {
+	setVolume(volume: number) {
 		const current = this.client?.sample()?.player?.volume;
 		if (current === undefined) {
 			log("ams-service", "setVolume skipped because current volume is unknown", volume);
@@ -106,13 +118,13 @@ class AMSMusicPlayerService extends MusicPlayerService {
 			device: { name: "Apple Media Service", status: "Connected" },
 		});
 	}
-	onAMSDeviceNameChanged(name) {
+	onAMSDeviceNameChanged(name: string) {
 		log("ams-service", "device name", name);
 		this.emit({
 			device: { name, status: "Connected" },
 		});
 	}
-	onAMSError(error) {
+	onAMSError(error: unknown) {
 		log("ams-service", "error", error);
 		this.emit({
 			playerConnection: ConnectionState.DISCONNECTED,
@@ -122,8 +134,8 @@ class AMSMusicPlayerService extends MusicPlayerService {
 			device: { status: `${error}` },
 		});
 	}
-	onAMSStateChanged(state) {
-		const update = {};
+	onAMSStateChanged(state: AMSState) {
+		const update: ModelUpdate = {};
 		if (!this.lastEmitted) this.lastEmitted = { track: {} };
 		const last = this.lastEmitted;
 		const playback = mapPlaybackState(state.playback.state);

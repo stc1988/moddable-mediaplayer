@@ -1,9 +1,12 @@
 import { log } from "Logger";
 import MusicPlayerService from "MusicPlayerService";
+import type { Track } from "model";
 import { ConnectionState, PlaybackState } from "model";
 import Timer from "timer";
 
-const TRACKS = Object.freeze([
+type MockTrack = Omit<Track, "elapsed"> & { initialElapsed: number };
+
+const TRACKS: readonly MockTrack[] = Object.freeze([
 	{
 		title: "Blinding Lights Extended Marquee Test Version",
 		artist: "The Weeknd",
@@ -35,6 +38,13 @@ const TRACKS = Object.freeze([
 ]);
 
 class MockMusicPlayerService extends MusicPlayerService {
+	declare trackIndex: number;
+	declare playing: boolean;
+	declare elapsed: number;
+	declare duration: number;
+	declare volume: number;
+	declare timer: Timer | undefined;
+
 	constructor() {
 		super();
 		this.logScope = "mock-service";
@@ -57,7 +67,7 @@ class MockMusicPlayerService extends MusicPlayerService {
 			elapsed,
 		};
 	}
-	selectTrack(index) {
+	selectTrack(index: number) {
 		this.trackIndex = (index + TRACKS.length) % TRACKS.length;
 		this.elapsed = 0;
 		this.duration = this.currentTrack.duration;
@@ -117,12 +127,12 @@ class MockMusicPlayerService extends MusicPlayerService {
 			track: this.createTrackUpdate(),
 		});
 	}
-	seekTo(seconds) {
+	seekTo(seconds: number) {
 		this.elapsed = Math.max(0, Math.min(this.duration, Math.round(seconds || 0)));
 		log("mock-service", "seekTo", this.elapsed);
 		this.emit({ track: { elapsed: this.elapsed } });
 	}
-	setVolume(volume) {
+	setVolume(volume: number) {
 		this.volume = Math.max(0, Math.min(1, volume || 0));
 		log("mock-service", "setVolume", this.volume);
 		this.emit({ volume: this.volume });
@@ -140,7 +150,7 @@ class MockMusicPlayerService extends MusicPlayerService {
 		if (!this.timer) return;
 		log("mock-service", "clear progress timer");
 		Timer.clear(this.timer);
-		delete this.timer;
+		this.timer = undefined;
 	}
 }
 

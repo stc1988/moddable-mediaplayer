@@ -1,15 +1,16 @@
 import config from "mc/config";
+import type { ModelUpdate } from "model";
 
 const enabled = config.mediaPlayerTrace !== false;
 
-function appendValue(parts, name, value) {
+function appendValue(parts: string[], name: string, value: unknown) {
 	if (value !== undefined) parts.push(`${name}=${value}`);
 }
 
-function describeUpdate(update) {
+function describeUpdate(update?: ModelUpdate) {
 	if (!update) return "none";
 
-	const parts = [];
+	const parts: string[] = [];
 	appendValue(parts, "playerConnection", update.playerConnection);
 	appendValue(parts, "playback", update.playback);
 	appendValue(parts, "volume", update.volume);
@@ -33,7 +34,7 @@ function describeUpdate(update) {
 	return parts.length ? parts.join(" ") : "empty";
 }
 
-function isElapsedOnlyUpdate(update) {
+function isElapsedOnlyUpdate(update?: ModelUpdate) {
 	if (!update?.track) return false;
 	if (
 		update.playerConnection !== undefined ||
@@ -56,14 +57,14 @@ function isElapsedOnlyUpdate(update) {
 	);
 }
 
-function log(scope, message, detail) {
+function log(scope: string, message: string, detail?: unknown) {
 	if (!enabled) return;
 	trace(`[MediaPlayer:${scope}] ${message}`);
 	if (detail !== undefined) trace(` ${detail}`);
 	trace("\n");
 }
 
-function logUpdate(scope, message, update) {
+function logUpdate(scope: string, message: string, update?: ModelUpdate) {
 	log(scope, message, describeUpdate(update));
 }
 
